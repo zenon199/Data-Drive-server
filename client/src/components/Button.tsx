@@ -1,4 +1,4 @@
-import { ReactElement } from "react";
+ import { ReactElement } from "react";
 
 interface ButtonProps {
     varient: "primary" | "secondary";
@@ -15,7 +15,7 @@ const defaultStyles = "px-4 py-4 rounded-md font-light flex items-center";
 
 export function Button({varient, text, startIcon}: ButtonProps) {
     return <button className={varientClasses[varient]+" "+defaultStyles}>
-        <div className="pr-2">
+        <div className="pr-1">
             {startIcon}
         </div>    
         {text}

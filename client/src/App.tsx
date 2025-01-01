@@ -8,7 +8,7 @@ function App() {
       <div>
       <Button varient="primary" text="Add content" startIcon={<PlusIcon />} />
       <Button varient="secondary" text="Share Brain" startIcon={<ShareIcon />} />
-      <Card />
+      <Card title="Youtube" link="" type="youtube" />
       </div>
   )
 }
