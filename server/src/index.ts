@@ -1,19 +1,19 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import {connectDb} from './models/db';
+import { connectDb } from './models/db';
 
-const app = express();
 dotenv.config();
+const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-import authRoutes from './routes/auth';
+import userRoutes from './routes/user';
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', userRoutes);
 
-app.listen(process.env.PORT || 3000, () => {
+app.listen(process.env.PORT, () => {
     console.log(`Server is running on port ${process.env.PORT}` );
     connectDb();
 });
