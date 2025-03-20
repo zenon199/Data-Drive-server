@@ -1,4 +1,4 @@
-import{ Request, Response, Router } from 'express';
+import { Request, Response, Router } from 'express';
 import z from 'zod';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -87,8 +87,6 @@ userRouter.post("/signin", async (req: Request, res: Response) => {
             return;
         }
         
-        
-        
         const token = jwt.sign(
             {id: user._id},
             JWT_SEC as string,
@@ -106,11 +104,6 @@ userRouter.post("/signin", async (req: Request, res: Response) => {
         return;
 
     } catch (error) {
-        console.error("Signin error details:", {
-            error: error,
-            message: error instanceof Error ? error.message : "Unknown error",
-            stack: error instanceof Error ? error.stack : undefined
-        });
         res.status(500).json({
             message: "Signin failed",
             error: error instanceof Error ? error.message : "Unknown error occurred"

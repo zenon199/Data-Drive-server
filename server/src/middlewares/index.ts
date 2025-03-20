@@ -1,92 +1,54 @@
-// import express from 'express';
-// import z from 'zod';
-// import bcrypt from 'bcrypt';
-// import jwt from 'jsonwebtoken';
-// import { User } from '../models';
+import { NextFunction,Request, Response } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { User } from "../models";
+import { Types } from "mongoose";
 
-// export const signup = async (req: express.Request, res: express.Response) => {
-//     try {
-//         const reqUser = z.object({
-//             email: z.string().email().min(3).max(25),
-//             password: z.string().min(6).max(20).regex(/[A-Z]/).regex(/[a-z]/).regex(/[0-9]/).regex(/[~!@#$%^&*()_+{}:"<>?]/)
-//         })
-//         const parsed = reqUser.safeParse(req.body);
-//         if(!parsed.success){
-//             res.status(400).json({
-//                 message: "Invalid inputs",
-//                 error: parsed.error
-//             });
-//         }
+interface IUser {
+    _id: Types.ObjectId;
+    email: string;
+    password: string;
+}
 
-//         const { email, password } = req.body;
-//         const  hashPass = await bcrypt.hash(password,8);
+interface CustomRequest extends Request {
+    user?: IUser;
+}
 
-//         await User.create({
-//             email,
-//             password: hashPass
-//         });
-//         res.status(200).json({
-//             message: "User created successfully"
-//         });
+const JWT_SEC = process.env.JWT_SEC || "TestSecret"
 
+export const userMiddleware = async (req: CustomRequest, res: Response, next: NextFunction) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader?.startsWith('Bearer ')) {
+            res.status(401).json({
+                message: "Invalid authorization header format"
+            });
+            return;
+        }
 
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            res.status(401).json({
+                message: "No token provided"
+            });
+            return;
+        }
 
-//     } catch (error) {
-//         res.status(500).json({
-//             message: "User not created",
-//             error: error
-//         });
-//     }
-// }
-
-// export const signin = async (req: express.Request, res: express.Response) => {
-//     try {
-//         const reqUser = z.object({
-//             email: z.string().email().min(3).max(25),
-//             password: z.string().min(1)
-//         });
-
-//         const parsed = reqUser.safeParse(req.body);
-//         if (!parsed.success) {
-//             return res.status(400).json({
-//                 message: "Invalid inputs",
-//                 error: parsed.error
-//             });
-//         }
-
-//         const { email, password } = req.body;
+        const decoded = jwt.verify(token, JWT_SEC) as JwtPayload;
         
-//         if (!email || !password) {
-//             return res.status(400).json({
-//                 message: "Email and password are required",
-//                 error: "Missing credentials"
-//             });
-//         }
+        const user = await User.findById(decoded.id);
+        if (!user) {
+            res.status(404).json({
+                message: "User not found"
+            });
+            return;
+        }
 
-//         const user = await User.findOne({email});
-//         if(!user){
-//             return res.status(404).json({
-//                 message: "User not found"
-//             });
-//         }
-//         const isValid = await bcrypt.compare(password, user.password);
-//         if(!isValid){
-//             return res.status(401).json({
-//                 message: "Invalid password"
-//             });
-//         }
-//         const token = jwt.sign({id: user._id
-//         }, process.env.JWT_SEC as string, {expiresIn: '1h'});
-//         return res.status(200).json({
-//             message: "Signin successful",
-//             token
-//         });
-
-//     } catch (error) {
-//         console.error("Signin error:", error);
-//         return res.status(500).json({
-//             message: "Signin failed",
-//             error: error instanceof Error ? error.message : "Unknown error occurred"
-//         });
-//     }
-// }
+        req.user = user;
+        next();
+    } catch (error) {
+        res.status(500).json({
+            message: "Authentication failed",
+            error: error
+        });
+    }
+};
