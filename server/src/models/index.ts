@@ -12,8 +12,6 @@ const userSchema = new mongoose.Schema({
     }
 })
 
-export const User = mongoose.model('User',userSchema);
-
 const contentSchema = new mongoose.Schema({
     
     title: {
@@ -38,4 +36,16 @@ const contentSchema = new mongoose.Schema({
     }
 })
 
+const linkSchema = new mongoose.Schema({
+    hash: String,
+    userId: {
+        type: mongoose.Types.ObjectId,
+        ref: "User",
+        required: true,
+        unique: true
+    }
+})
+
+export const User = mongoose.model('User',userSchema);
 export const contentModel = mongoose.model('contentModel', contentSchema);
+export const linkModel = mongoose.model('linkModel', linkSchema);

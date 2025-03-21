@@ -72,24 +72,46 @@ contentRouter.post('/post', userMiddleware, async (req: CustomRequest, res: Resp
     }
 });
 
-contentRouter.delete('/delete', userMiddleware, async (req: CustomRequest, res: Response) => {
+contentRouter.delete('/delete', userMiddleware, async (req: CustomRequest, res: Response): Promise<void> => {
     try {
-        const contentId = req.body.contentId;
+        const { contentId } = req.body;
+        const userId = req.user?._id;
 
-    await contentModel.deleteMany({
-        contentId,
-        userId: req.user
-    });
-    
-    res.status(200).json({
-            msg: "Content deleted successfully"
-    })
+        if (!contentId) {
+            res.status(400).json({
+                message: "Content ID is required"
+            });
+            return;
+        }
+
+        if (!userId) {
+            res.status(401).json({
+                message: "User not authenticated"
+            });
+            return;
+        }
+
+        const result = await contentModel.deleteOne({
+            _id: contentId,
+            userId: userId
+        });
+
+        if (result.deletedCount === 0) {
+            res.status(404).json({
+                message: "Content not found or unauthorized"
+            });
+            return;
+        }
+
+        res.status(200).json({
+            message: "Content deleted successfully"
+        });
     } catch (error) {
         res.status(500).json({
             msg: "Content failed to delete",
             error: error
     })
     }
-})
+});
 
 export default contentRouter;
